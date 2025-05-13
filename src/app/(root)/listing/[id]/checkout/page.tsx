@@ -11,9 +11,36 @@ import Link from "next/link";
 import Listing from "./listing";
 import Review from "./review";
 import { useGetDetailListingQuery } from "@/services/listing.service";
+import { useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
+import moment from "moment";
+import { moneyFormat } from "@/lib/utils";
 
 function Checkout({ params }: { params: { id: string }}) {
+
   const { data: listing } = useGetDetailListingQuery(params.id);
+
+  const searchParams = useSearchParams();
+  const [startDate, setStartDate] = useState<Date | undefined>(moment(searchParams.get("start_date")).toDate());
+  const [endDate, setEndDate] = useState<Date | undefined>(moment(searchParams.get("end_date")).toDate());
+
+  const booking = useMemo(() => {
+    let totalDays = 0, subTotal = 0, tax = 0, grandTotal = 0;
+    if (startDate && endDate) {
+      totalDays = moment(endDate).diff(startDate, 'days');
+      subTotal = totalDays * listing?.data.price_per_day;
+      tax = subTotal * 0.1;
+      grandTotal = subTotal + tax;
+    }
+
+    return {
+      totalDays,
+      subTotal,
+      tax,
+      grandTotal
+    }
+  }, [startDate, endDate, listing]);
+
   return (
     <main>
       <section
@@ -38,15 +65,14 @@ function Checkout({ params }: { params: { id: string }}) {
             </h1>
             <div className="rounded-[30px] mt-2.5 p-[30px] bg-white border border-border shadow-indicator space-y-5">
               <div className="space-y-5">
-                {/* <DatePickerDemo />
-                <DatePickerDemo /> */}
+                <DatePickerDemo placeholder="Start Date" date={startDate} setDate={setStartDate} />
+                <DatePickerDemo placeholder="End Date" date={endDate} setDate={setEndDate} />
               </div>
               <div className="space-y-5">
-                <CardBooking title="Total days" value="30 days" />
-                <CardBooking title="Sub total" value="$83,422" />
-                <CardBooking title="Tax (15%)" value="$23,399" />
-                <CardBooking title="Insurance" value="$7,492" />
-                <CardBooking title="Grand total price" value="$103,940" />
+                <CardBooking title="Total days" value={`${booking.totalDays} days`} />
+                <CardBooking title="Sub total" value={ moneyFormat.format(booking.subTotal) } />
+                <CardBooking title="Tax (10%)" value={ moneyFormat.format(booking.tax) } />
+                <CardBooking title="Grand total price" value={ moneyFormat.format(booking.grandTotal) } />
               </div>
             </div>
           </div>
