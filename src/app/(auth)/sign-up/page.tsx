@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/atomics/use-toast";
 import { useRegisterMutation } from "@/services/auth.service";
 import { register } from "module";
+import { signIn } from "next-auth/react";
 
 const schema = yup.object().shape({
   name: yup.string().min(5).required(),
@@ -51,15 +52,23 @@ function SignUp() {
         password_confirmation: values.password,
       }).unwrap();
 
-      console.log("🚀 ~ onSubmit ~ res:", res)
+      if (res.success) {
+        const user = res.data
+        await signIn('credentials', {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          token: user.token,
+          redirect: false,
+        })
+        toast({
+          title: "Welcome",
+          description: "Sign in successfully",
+          open: true,
+        });
+      }
 
-      form.reset();
-      toast({
-        title: "Welcome",
-        description: "Sign in successfully",
-        open: true,
-      });
-      // router.push("/");
+      router.push("/");
     } catch (error: any) {
        toast({
         title: "Something when wrong",
