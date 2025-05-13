@@ -1,15 +1,18 @@
 import { Button } from "@/components/atomics/button";
 import Title from "@/components/atomics/title";
+import { useToast } from "@/components/atomics/use-toast";
 import CardBooking from "@/components/molecules/card/card-booking";
 import { DatePickerDemo } from "@/components/molecules/date-picker";
 import { moneyFormat } from "@/lib/utils";
+import { useCheckAvailabilityMutation } from "@/services/transaction.service";
 import moment from "moment";
 import Image from "next/image";
 import Link from "next/link";
+import { title } from "process";
 import React, { useMemo, useState } from "react";
 
 interface BookingSectionProps {
-  id: string;
+  id: number;
   price: number;
 }
 
@@ -17,6 +20,10 @@ function BookingSection({ id, price }: BookingSectionProps) {
 
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+
+  const [ checkAvailability, { isLoading } ] = useCheckAvailabilityMutation();
+
+  const { toast } = useToast();
 
   const booking = useMemo(() => {
     let totalDays = 0, subTotal = 0, tax = 0, grandTotal = 0;
@@ -35,6 +42,38 @@ function BookingSection({ id, price }: BookingSectionProps) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startDate, endDate]);
+
+  const handleBook = async () => {
+    try {
+      const data = {
+        listing_id: id,
+        start_date: moment(startDate).format('YYYY-MM-DD'),
+        end_date:  moment(endDate).format('YYYY-MM-DD'),
+      }
+      const res = await checkAvailability(data).unwrap();
+      console.log("🚀 ~ handleBook ~ res:", res)
+    } catch (error: any) {
+      if (error.status === 401) {
+        toast({
+          title: "something when wrong",
+          description: "Please login first",
+          variant: 'destructive',
+          action: (
+            <Link href={`/sign-in?callbackUrl=${window.location.href}`}>
+            Sign in
+            </Link>
+          )
+        })
+      } else if (error.status === 422) {
+        toast({
+          title: "something when wrong",
+          description: error.data.message,
+          variant: 'destructive',
+        })
+      }
+    }
+  }
+
   return (
     <div className="w-full max-w-[360px] xl:max-w-[400px] h-fit space-y-5 bg-white border border-border rounded-[20px] p-[30px] shadow-indicator">
       <h1 className="font-bold text-lg leading-[27px] text-secondary">
@@ -54,11 +93,9 @@ function BookingSection({ id, price }: BookingSectionProps) {
         <CardBooking title="Tax (10%)" value={ moneyFormat.format(booking.tax) } />
         <CardBooking title="Grand total price" value={ moneyFormat.format(booking.grandTotal) } />
       </div>
-      <Link href={`/listing/${id}/checkout`}>
-        <Button variant="default" className="mt-4">
+        <Button variant="default" className="mt-4" onClick={handleBook} disabled={isLoading}>
           Book Now
         </Button>
-      </Link>
       <div className="bg-gray-light p-5 rounded-[20px] flex items-center space-x-4">
         <Image src="/icons/medal-star.svg" alt="icon" height={36} width={36} />
         <div>
