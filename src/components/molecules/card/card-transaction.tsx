@@ -2,10 +2,12 @@ import { Badge } from '@/components/atomics/badge'
 import { Button } from '@/components/atomics/button'
 import { CityTransactionProps } from '@/interfaces/city-transaction'
 import Image from 'next/image'
+import Link from 'next/link';
 import { HiOutlineClock, HiOutlineCurrencyDollar } from "react-icons/hi";
 
 
 function CardTransaction({
+  id,
   image,
   title,
   location,
@@ -17,11 +19,12 @@ function CardTransaction({
     <figure className='flex items-center justify-between bg-white rounded-3xl p-4 border border-border shadow-indicator'>
       <div className='flex items-center space-x-4'>
         <Image
-          src={image}
+          src={`${process.env.NEXT_PUBLIC_STORAGE_BASE_URL}/${image}`}
           alt={title}
           height={0}
           width={0}
           className='w-[120px] h-[90px] rounded-2xl'
+          unoptimized
         />
 
         <div>
@@ -44,7 +47,7 @@ function CardTransaction({
                 {status}
               </Badge>
             }
-            
+
           </div>
           <div className='flex gap-4 mt-4'>
             <div className='mt-2 flex flex-wrap gap-x-5 gap-y-2.5'>
@@ -77,18 +80,20 @@ function CardTransaction({
               >
                 Manage
               </Button>
-              <Button
-                variant='third'
-                size='header'
-              >
-                Preview
-              </Button>
+              <Link href={`/booking-success/${id}/success`}>
+                <Button
+                  variant='third'
+                  size='header'
+                >
+                  Preview
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
       </div>
 
-      
+
     </figure>
   )
 }
