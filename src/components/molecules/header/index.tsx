@@ -14,7 +14,6 @@ import { signOut, useSession } from 'next-auth/react'
 
 function Header() {
     const {data: session} = useSession();
-    console.log("🚀 ~ Header ~ session:", session)
 
     return (
       <header className="container mx-auto fixed inset-x-0 top-[30px] z-20">
