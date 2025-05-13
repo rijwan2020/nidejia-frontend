@@ -16,7 +16,13 @@ export const transactionApi = apiSlice.injectEndpoints({
                 body: payload,
             })
         }),
+        getDetailTransaction: builder.query({
+            query: (id) => ({
+                url: `/transaction/${id}`,
+                method: 'GET',
+            })
+        }),
     })
 })
 
-export const { useCheckAvailabilityMutation, useTransactionMutation } = transactionApi
+export const { useCheckAvailabilityMutation, useTransactionMutation, useGetDetailTransactionQuery } = transactionApi
