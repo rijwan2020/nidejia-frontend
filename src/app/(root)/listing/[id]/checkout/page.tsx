@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Breadcrumbs from "@/components/molecules/breadcrumbs";
 import CardBooking from "@/components/molecules/card/card-booking";
@@ -8,8 +10,10 @@ import { DatePickerDemo } from "@/components/molecules/date-picker";
 import Link from "next/link";
 import Listing from "./listing";
 import Review from "./review";
+import { useGetDetailListingQuery } from "@/services/listing.service";
 
-function Checkout() {
+function Checkout({ params }: { params: { id: string }}) {
+  const { data: listing } = useGetDetailListingQuery(params.id);
   return (
     <main>
       <section
@@ -25,7 +29,7 @@ function Checkout() {
         id="booking-information-section"
         className="container mx-auto flex space-x-[50px] -mt-[148px]"
       >
-        <Listing />
+        { listing && <Listing listing={listing.data} /> }
 
         <div className="w-full max-w-[460px] pt-[50px]">
           <div>
@@ -34,8 +38,8 @@ function Checkout() {
             </h1>
             <div className="rounded-[30px] mt-2.5 p-[30px] bg-white border border-border shadow-indicator space-y-5">
               <div className="space-y-5">
-                <DatePickerDemo />
-                <DatePickerDemo />
+                {/* <DatePickerDemo />
+                <DatePickerDemo /> */}
               </div>
               <div className="space-y-5">
                 <CardBooking title="Total days" value="30 days" />
