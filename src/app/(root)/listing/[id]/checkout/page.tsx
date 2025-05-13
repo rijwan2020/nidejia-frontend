@@ -11,14 +11,20 @@ import Link from "next/link";
 import Listing from "./listing";
 import Review from "./review";
 import { useGetDetailListingQuery } from "@/services/listing.service";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import moment from "moment";
 import { moneyFormat } from "@/lib/utils";
+import { useTransactionMutation } from "@/services/transaction.service";
+import { useToast } from "@/components/atomics/use-toast";
 
 function Checkout({ params }: { params: { id: string }}) {
 
   const { data: listing } = useGetDetailListingQuery(params.id);
+
+  const [transaction, { isLoading }] = useTransactionMutation();
+
+  const { toast } = useToast();
 
   const searchParams = useSearchParams();
   const [startDate, setStartDate] = useState<Date | undefined>(moment(searchParams.get("start_date")).toDate());
@@ -40,6 +46,31 @@ function Checkout({ params }: { params: { id: string }}) {
       grandTotal
     }
   }, [startDate, endDate, listing]);
+
+  const router = useRouter();
+
+  const handlePayment = async () => {
+    try {
+      const data = {
+        listing_id: listing.data.id,
+        start_date: moment(startDate).format('YYYY-MM-DD'),
+        end_date: moment(endDate).format('YYYY-MM-DD'),
+      }
+
+      const res = await transaction(data).unwrap();
+
+      if (res.success) {
+        router.push(`/booking-success/${res.data.id}/success`);
+      }
+
+    } catch (error: any) {
+      toast({
+        title: "Something when wrong",
+        description: error.data.message,
+        variant: 'destructive',
+      })
+    }
+  }
 
   return (
     <main>
@@ -124,11 +155,9 @@ function Checkout({ params }: { params: { id: string }}) {
                   I agree with terms & conditions
                 </label>
               </div>
-              <Link href={`/booking-success/12321aa12/success`}>
-                <Button variant="default" size="default" className="mt-4">
-                  Make a Payment
-                </Button>
-              </Link>
+              <Button variant="default" size="default" className="mt-4" disabled={isLoading} onClick={handlePayment}>
+                Make a Payment
+              </Button>
             </div>
           </div>
         </div>
